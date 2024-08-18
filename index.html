@@ -291,24 +291,31 @@
     </div>
 </div>
 
+<!-- Incluye los scripts de Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
 <script>
     // Configura Firebase con tus credenciales
     const firebaseConfig = {
-  apiKey: "AIzaSyDC2XqSaS13V9iw6zxPu04dyl_K4fnPpeY",
-  authDomain: "lugares-5a99d.firebaseapp.com",
-  databaseURL: "https://lugares-5a99d-default-rtdb.firebaseio.com",
-  projectId: "lugares-5a99d",
-  storageBucket: "lugares-5a99d.appspot.com",
-  messagingSenderId: "868620913897",
-  appId: "1:868620913897:web:72cc5bdd3842e0a9c07478"
-};
+        apiKey: "AIzaSyDC2XqSaS13V9iw6zxPu04dyl_K4fnPpeY",
+        authDomain: "lugares-5a99d.firebaseapp.com",
+        databaseURL: "https://lugares-5a99d-default-rtdb.firebaseio.com",
+        projectId: "lugares-5a99d",
+        storageBucket: "lugares-5a99d.appspot.com",
+        messagingSenderId: "868620913897",
+        appId: "1:868620913897:web:72cc5bdd3842e0a9c07478"
+    };
 
     // Inicializa Firebase
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    let changesMade = false;
+    const placesList = document.getElementById('places-list');
+    const emptySpace = document.getElementById('empty-space');
+    const days = ['dia-lunes', 'dia-martes', 'dia-miércoles', 'dia-jueves', 'dia-viernes', 'dia-sábado', 'dia-domingo'];
+    let currentOpenDay = null;
+    let selectedPlace = null;
     let data = {
         lugares: [],
         'dia-lunes': [],
@@ -320,23 +327,16 @@
         'dia-domingo': []
     };
 
-    let changesMade = false;
-    const placesList = document.getElementById('places-list');
-    const emptySpace = document.getElementById('empty-space');
-    const days = ['dia-lunes', 'dia-martes', 'dia-miércoles', 'dia-jueves', 'dia-viernes', 'dia-sábado', 'dia-domingo'];
-    let currentOpenDay = null;
-    let selectedPlace = null;
-
     function loadFromFirebase() {
         const dbRef = database.ref('/');
         dbRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            loadFromData(data); // Asumiendo que tienes una función para cargar datos
+            const firebaseData = snapshot.val();
+            loadFromData(firebaseData); 
         });
     }
 
     function saveToFirebase() {
-        const data = {
+        const saveData = {
             lugares: Array.from(placesList.children).map(item => item.textContent),
             'dia-lunes': Array.from(document.getElementById('dia-lunes').children).map(item => item.textContent),
             'dia-martes': Array.from(document.getElementById('dia-martes').children).map(item => item.textContent),
@@ -347,12 +347,15 @@
             'dia-domingo': Array.from(document.getElementById('dia-domingo').children).map(item => item.textContent)
         };
 
-        database.ref('/').set(data)
+        database.ref('/').set(saveData)
             .then(() => console.log('Datos guardados en Firebase'))
             .catch(error => console.error('Error al guardar datos en Firebase:', error));
     }
 
-    function loadFromData(data) {
+    function loadFromData(firebaseData) {
+        if (!firebaseData) return;
+
+        data = firebaseData;
         const assignedPlaces = new Set();
 
         placesList.innerHTML = '';
