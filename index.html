@@ -252,7 +252,7 @@
         <div class="day-places" id="dia-lunes"></div>
         <div class="day-places" id="dia-martes"></div>
         <div class="day-places" id="dia-miércoles"></div>
-        <div class=" day-places" id="dia-jueves"></div>
+        <div class="day-places" id="dia-jueves"></div>
         <div class="day-places" id="dia-viernes"></div>
         <div class="day-places" id="dia-sábado"></div>
         <div class="day-places" id="dia-domingo"></div>
@@ -332,16 +332,18 @@
     function loadFromData(firebaseData) {
         Object.assign(data, firebaseData); // Cargar los datos desde Firebase
         placesList.innerHTML = '';
-        days.forEach(day => {
+        Object.keys(data).forEach(day => {
             const dayElement = document.getElementById(day);
-            dayElement.innerHTML = '';
-            firebaseData[day].forEach(place => {
-                const placeItem = createPlaceItem(place, returnPlace);
-                dayElement.appendChild(placeItem);
-            });
+            if(dayElement) {
+                dayElement.innerHTML = '';
+                data[day].forEach(place => {
+                    const placeItem = createPlaceItem(place, returnPlace);
+                    dayElement.appendChild(placeItem);
+                });
+            }
         });
 
-        firebaseData.lugares.forEach(place => {
+        data.lugares.forEach(place => {
             const placeItem = createPlaceItem(place, assignPlace);
             placesList.appendChild(placeItem);
         });
@@ -462,11 +464,13 @@
     function cleanDuplicates() {
         const assignedPlaces = new Set();
 
-        days.forEach(day => {
+        Object.keys(data).forEach(day => {
             const dayElement = document.getElementById(day);
-            Array.from(dayElement.children).forEach(child => {
-                assignedPlaces.add(child.textContent);
-            });
+            if (dayElement) {
+                Array.from(dayElement.children).forEach(child => {
+                    assignedPlaces.add(child.textContent);
+                });
+            }
         });
 
         Array.from(placesList.children).forEach(child => {
