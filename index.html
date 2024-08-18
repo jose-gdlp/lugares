@@ -291,9 +291,10 @@
     </div>
 </div>
 
-<!-- Incluye los scripts de Firebase -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+
 <script>
     // Configura Firebase con tus credenciales
     const firebaseConfig = {
@@ -310,80 +311,61 @@
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    let changesMade = false;
-    const placesList = document.getElementById('places-list');
-    const emptySpace = document.getElementById('empty-space');
-    const days = ['dia-lunes', 'dia-martes', 'dia-miércoles', 'dia-jueves', 'dia-viernes', 'dia-sábado', 'dia-domingo'];
-    let currentOpenDay = null;
-    let selectedPlace = null;
     let data = {
         lugares: [],
-        'dia-lunes': [],
-        'dia-martes': [],
-        'dia-miércoles': [],
-        'dia-jueves': [],
-        'dia-viernes': [],
-        'dia-sábado': [],
-        'dia-domingo': []
+        "dia-lunes": [],
+        "dia-martes": [],
+        "dia-miércoles": [],
+        "dia-jueves": [],
+        "dia-viernes": [],
+        "dia-sábado": [],
+        "dia-domingo": []
     };
+
+    let currentOpenDay = null;
+    let selectedPlace = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadFromFirebase(); // Cargar los datos desde Firebase al inicio
+    });
 
     function loadFromFirebase() {
         const dbRef = database.ref('/');
         dbRef.on('value', (snapshot) => {
-            const firebaseData = snapshot.val();
-            loadFromData(firebaseData); 
+            data = snapshot.val();
+            loadFromData(data);
         });
     }
 
     function saveToFirebase() {
-        const saveData = {
-            lugares: Array.from(placesList.children).map(item => item.textContent),
-            'dia-lunes': Array.from(document.getElementById('dia-lunes').children).map(item => item.textContent),
-            'dia-martes': Array.from(document.getElementById('dia-martes').children).map(item => item.textContent),
-            'dia-miércoles': Array.from(document.getElementById('dia-miércoles').children).map(item => item.textContent),
-            'dia-jueves': Array.from(document.getElementById('dia-jueves').children).map(item => item.textContent),
-            'dia-viernes': Array.from(document.getElementById('dia-viernes').children).map(item => item.textContent),
-            'dia-sábado': Array.from(document.getElementById('dia-sábado').children).map(item => item.textContent),
-            'dia-domingo': Array.from(document.getElementById('dia-domingo').children).map(item => item.textContent)
-        };
-
-        database.ref('/').set(saveData)
+        database.ref('/').set(data)
             .then(() => console.log('Datos guardados en Firebase'))
             .catch(error => console.error('Error al guardar datos en Firebase:', error));
     }
 
-    function loadFromData(firebaseData) {
-        if (!firebaseData) return;
-
-        data = firebaseData;
-        const assignedPlaces = new Set();
+    function loadFromData(data) {
+        const placesList = document.getElementById('places-list');
+        const days = ['dia-lunes', 'dia-martes', 'dia-miércoles', 'dia-jueves', 'dia-viernes', 'dia-sábado', 'dia-domingo'];
 
         placesList.innerHTML = '';
+        days.forEach(day => {
+            const dayElement = document.getElementById(day);
+            dayElement.innerHTML = '';
+        });
+
         data.lugares.forEach(place => {
             const placeItem = createPlaceItem(place, assignPlace);
             placesList.appendChild(placeItem);
         });
 
         days.forEach(day => {
-            const dayElement = document.getElementById(day);
-            dayElement.innerHTML = '';
-
             data[day].forEach(place => {
-                if (!assignedPlaces.has(place)) {
-                    const placeItem = createPlaceItem(place, returnPlace);
-                    dayElement.appendChild(placeItem);
-                    assignedPlaces.add(place);
-                }
+                const placeItem = createPlaceItem(place, returnPlace);
+                document.getElementById(day).appendChild(placeItem);
             });
         });
 
         cleanDuplicates();
-    }
-
-    function sortPlacesList(list) {
-        const itemsArray = Array.from(list.children);
-        itemsArray.sort((a, b) => a.textContent.localeCompare(b.textContent));
-        itemsArray.forEach(item => list.appendChild(item));
     }
 
     function toggleDay(day) {
@@ -394,7 +376,7 @@
         document.getElementById(day).style.display = 'block';
         document.getElementById('box-' + day.split('-')[1]).classList.add('selected');
         currentOpenDay = day;
-        emptySpace.style.display = 'none';
+        document.getElementById('empty-space').style.display = 'none';
     }
 
     function assignPlace(element) {
@@ -402,19 +384,16 @@
             showPopup("PRIMERO SELECCIONA UN DÍA");
         } else {
             const selectedDay = document.getElementById(currentOpenDay);
-
-            // Mover el lugar al día seleccionado
             const place = element.textContent;
+
             data.lugares = data.lugares.filter(l => l !== place);
             data[currentOpenDay].push(place);
 
-            // Actualizar visualmente
             selectedDay.appendChild(element);
             element.onclick = () => returnPlace(element);
             selectPlace(element);
             sortPlacesList(selectedDay);
             cleanDuplicates();
-            changesMade = true;
         }
     }
 
@@ -422,17 +401,15 @@
         const place = element.textContent;
         const parentDay = element.parentElement.id;
 
-        // Mover el lugar de vuelta a la lista de lugares
         data[parentDay] = data[parentDay].filter(l => l !== place);
         data.lugares.push(place);
 
-        // Actualizar visualmente
+        const placesList = document.getElementById('places-list');
         placesList.appendChild(element);
         element.onclick = () => assignPlace(element);
         deselectPlace();
         sortPlacesList(placesList);
         cleanDuplicates();
-        changesMade = true;
     }
 
     function createPlaceItem(place, clickHandler) {
@@ -463,17 +440,14 @@
             const place = selectedPlace.textContent;
             const parentDay = selectedPlace.parentElement.id;
 
-            // Eliminar el lugar de la data
             if (parentDay === 'places-list') {
                 data.lugares = data.lugares.filter(l => l !== place);
             } else {
                 data[parentDay] = data[parentDay].filter(l => l !== place);
             }
 
-            // Actualizar visualmente
             selectedPlace.parentElement.removeChild(selectedPlace);
             selectedPlace = null;
-            changesMade = true;
         } else {
             showPopup("Por favor, selecciona un lugar para eliminar.");
         }
@@ -490,6 +464,8 @@
 
     function cleanDuplicates() {
         const assignedPlaces = new Set();
+        const placesList = document.getElementById('places-list');
+        const days = ['dia-lunes', 'dia-martes', 'dia-miércoles', 'dia-jueves', 'dia-viernes', 'dia-sábado', 'dia-domingo'];
 
         days.forEach(day => {
             const dayElement = document.getElementById(day);
@@ -519,15 +495,14 @@
             if (!data.lugares.includes(newPlace) && !Object.values(data).flat().includes(newPlace)) {
                 data.lugares.push(newPlace);
                 const placeItem = createPlaceItem(newPlace, assignPlace);
+                const placesList = document.getElementById('places-list');
                 placesList.appendChild(placeItem);
                 sortPlacesList(placesList);
-                changesMade = true;
 
-                // Limpiar los campos de la ventana de "Agregar Lugar"
                 document.getElementById('municipio').value = '';
                 document.getElementById('localidad').value = '';
 
-                toggleAddPlacePopup();  // Cierra la ventana emergente
+                toggleAddPlacePopup();
             } else {
                 showPopup("El lugar ya existe en la lista.");
             }
@@ -536,9 +511,11 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        loadFromFirebase(); // Cargar los datos desde Firebase al inicio
-    });
+    function sortPlacesList(list) {
+        const itemsArray = Array.from(list.children);
+        itemsArray.sort((a, b) => a.textContent.localeCompare(b.textContent));
+        itemsArray.forEach(item => list.appendChild(item));
+    }
 
 </script>
 
