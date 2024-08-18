@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asignar Lugares a Días</title>
+    <style>
+        /* Estilos del documento */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .title h1 {
+            font-size: 28px;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .title h2 {
+            font-size: 20px;
+            margin: 5px 0 0;
+            font-weight: normal;
+        }
+
+        .days-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            width: 100%;
+            margin-top: 80px;
+        }
+
+        .day-box {
+            background-color: #001b70;
+            flex: 1 1 calc(14% - 10px);
+            padding: 8px;
+            margin: 5px;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            min-width: 60px;
+        }
+
+        .day-box:hover {
+            background-color: #0B4CCF;
+        }
+
+        .day-box.selected {
+            background-color: #6a1b9a;
+        }
+
+        .main-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            height: 70vh;
+        }
+
+        .places-container {
+            width: 25%;
+            background-color: #fff;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .day-places {
+            background-color: #fff;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            overflow-y: auto;
+            width: 70%;
+            box-sizing: border-box;
+            height: 100%;
+            display: none;
+        }
+
+        .empty-space {
+            background-color: #fff;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 70%;
+            height: 100%;
+        }
+
+        .place-item {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #e9ecef;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .place-item:hover {
+            background-color: #001b70;
+            color: white;
+            border-color: #001b70;
+        }
+
+        .place-item.selected {
+            background-color: #001b70;
+            color: white;
+            border-color: #001b70;
+        }
+
+        .control-buttons {
+            margin-top: 20px;
+        }
+
+        .control-buttons button {
+            margin: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .control-buttons button:hover {
+            background-color: #0B4CCF;
+        }
+
+        .control-buttons button:active {
+            background-color: #6a1b9a;
+        }
+
+        .control-buttons .delete-button {
+            background-color: #FF0000;
+            color: white;
+        }
+
+        .control-buttons .delete-button:hover {
+            background-color: #cc0000;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .popup-content button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            background-color: #001b70;
+            color: white;
+            border: none;
+            transition: background-color 0.3s;
+        }
+
+        .popup-content button:hover {
+            background-color: #0B4CCF;
+        }
+
+        .popup-content button:active {
+            background-color: #6a1b9a;
+        }
+
+        @media (max-width: 768px) {
+            .days-container {
+                flex-wrap: wrap;
+                justify-content: space-between;
+                margin-top: 150px;
+            }
+            .day-box {
+                flex: 1 1 calc(14% - 5px);
+                margin: 3px;
+                font-size: 12px;
+            }
+            .main-container {
+                flex-direction: column;
+                align-items: center;
+                height: auto;
+            }
+            .places-container, .day-places, .empty-space {
+                width: 90%;
+                margin-bottom: 20px;
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="title">
+        <h1>Distribuidora Colón</h1>
+        <h2>Asignación de lugares por día</h2>
+    </div>
+    <div class="days-container">
+        <div class="day-box" id="box-lunes" onclick="toggleDay('dia-lunes')">Lunes</div>
+        <div class="day-box" id="box-martes" onclick="toggleDay('dia-martes')">Martes</div>
+        <div class="day-box" id="box-miércoles" onclick="toggleDay('dia-miércoles')">Miércoles</div>
+        <div class="day-box" id="box-jueves" onclick="toggleDay('dia-jueves')">Jueves</div>
+        <div class="day-box" id="box-viernes" onclick="toggleDay('dia-viernes')">Viernes</div>
+        <div class="day-box" id="box-sábado" onclick="toggleDay('dia-sábado')">Sábado</div>
+        <div class="day-box" id="box-domingo" onclick="toggleDay('dia-domingo')">Domingo</div>
+    </div>
+    <div class="main-container">
+        <div class="places-container" id="places-list"></div>
+        <div class="empty-space" id="empty-space"></div>
+        <div class="day-places" id="dia-lunes"></div>
+        <div class="day-places" id="dia-martes"></div>
+        <div class="day-places" id="dia-miércoles"></div>
+        <div class="day-places" id="dia-jueves"></div>
+        <div class="day-places" id="dia-viernes"></div>
+        <div class="day-places" id="dia-sábado"></div>
+        <div class="day-places" id="dia-domingo"></div>
+    </div>
+    <div class="control-buttons">
+        <button onclick="toggleAddPlacePopup()">Agregar Lugar</button>
+        <button class="delete-button" onclick="deleteSelectedPlace()">Eliminar</button>
+        <button onclick="saveToFirebase()">Guardar cambios</button>
+    </div>
+</div>
+
+<div class="popup" id="popup-add-place">
+    <div class="popup-content">
+        <h3>Agregar Lugar</h3>
+        <label for="municipio">Municipio:</label>
+        <input type="text" id="municipio" placeholder="Ingrese el municipio">
+        <label for="localidad">Localidad:</label>
+        <input type="text" id="localidad" placeholder="Ingrese la localidad">
+        <button onclick="addPlace()">Guardar</button>
+        <button onclick="toggleAddPlacePopup()">Cancelar</button>
+    </div>
+</div>
+
+<div class="popup" id="popup-warning">
+    <div class="popup-content">
+        <p id="popup-message"></p>
+        <button onclick="closePopup()">Aceptar</button>
+    </div>
+</div>
+
+<div class="popup" id="popup-confirm-delete">
+    <div class="popup-content">
+        <p>¿Estás seguro de que deseas eliminar este lugar?</p>
+        <button onclick="confirmDelete()">Sí</button>
+        <button onclick="cancelDelete()">No</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+<script>
+    // Configura Firebase con tus credenciales
+    const firebaseConfig = {
+  apiKey: "AIzaSyDC2XqSaS13V9iw6zxPu04dyl_K4fnPpeY",
+  authDomain: "lugares-5a99d.firebaseapp.com",
+  databaseURL: "https://lugares-5a99d-default-rtdb.firebaseio.com",
+  projectId: "lugares-5a99d",
+  storageBucket: "lugares-5a99d.appspot.com",
+  messagingSenderId: "868620913897",
+  appId: "1:868620913897:web:72cc5bdd3842e0a9c07478"
+};
+
+    // Inicializa Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    let changesMade = false;
+    const placesList = document.getElementById('places-list');
+    const emptySpace = document.getElementById('empty-space');
+    const days = ['dia-lunes', 'dia-martes', 'dia-miércoles', 'dia-jueves', 'dia-viernes', 'dia-sábado', 'dia-domingo'];
+    let currentOpenDay = null;
+    let selectedPlace = null;
+
+    function loadFromFirebase() {
+        const dbRef = database.ref('/');
+        dbRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            loadFromData(data); // Asumiendo que tienes una función para cargar datos
+        });
+    }
+
+    function saveToFirebase() {
+        const data = {
+            lugares: Array.from(placesList.children).map(item => item.textContent),
+            'dia-lunes': Array.from(document.getElementById('dia-lunes').children).map(item => item.textContent),
+            'dia-martes': Array.from(document.getElementById('dia-martes').children).map(item => item.textContent),
+            'dia-miércoles': Array.from(document.getElementById('dia-miércoles').children).map(item => item.textContent),
+            'dia-jueves': Array.from(document.getElementById('dia-jueves').children).map(item => item.textContent),
+            'dia-viernes': Array.from(document.getElementById('dia-viernes').children).map(item => item.textContent),
+            'dia-sábado': Array.from(document.getElementById('dia-sábado').children).map(item => item.textContent),
+            'dia-domingo': Array.from(document.getElementById('dia-domingo').children).map(item => item.textContent)
+        };
+
+        database.ref('/').set(data)
+            .then(() => console.log('Datos guardados en Firebase'))
+            .catch(error => console.error('Error al guardar datos en Firebase:', error));
+    }
+
+    function loadFromData(data) {
+        const assignedPlaces = new Set();
+
+        placesList.innerHTML = '';
+        data.lugares.forEach(place => {
+            const placeItem = createPlaceItem(place, assignPlace);
+            placesList.appendChild(placeItem);
+        });
+
+        days.forEach(day => {
+            const dayElement = document.getElementById(day);
+            dayElement.innerHTML = '';
+
+            data[day].forEach(place => {
+                if (!assignedPlaces.has(place)) {
+                    const placeItem = createPlaceItem(place, returnPlace);
+                    dayElement.appendChild(placeItem);
+                    assignedPlaces.add(place);
+                }
+            });
+        });
+
+        cleanDuplicates();
+    }
+
+    function sortPlacesList(list) {
+        const itemsArray = Array.from(list.children);
+        itemsArray.sort((a, b) => a.textContent.localeCompare(b.textContent));
+        itemsArray.forEach(item => list.appendChild(item));
+    }
+
+    function toggleDay(day) {
+        if (currentOpenDay) {
+            document.getElementById(currentOpenDay).style.display = 'none';
+            document.getElementById('box-' + currentOpenDay.split('-')[1]).classList.remove('selected');
+        }
+        document.getElementById(day).style.display = 'block';
+        document.getElementById('box-' + day.split('-')[1]).classList.add('selected');
+        currentOpenDay = day;
+        emptySpace.style.display = 'none';
+    }
+
+    function assignPlace(element) {
+        if (!currentOpenDay) {
+            showPopup("PRIMERO SELECCIONA UN DÍA");
+        } else {
+            const selectedDay = document.getElementById(currentOpenDay);
+
+            // Mover el lugar al día seleccionado
+            const place = element.textContent;
+            data.lugares = data.lugares.filter(l => l !== place);
+            data[currentOpenDay].push(place);
+
+            // Actualizar visualmente
+            selectedDay.appendChild(element);
+            element.onclick = () => returnPlace(element);
+            selectPlace(element);
+            sortPlacesList(selectedDay);
+            cleanDuplicates();
+            changesMade = true;
+        }
+    }
+
+    function returnPlace(element) {
+        const place = element.textContent;
+        const parentDay = element.parentElement.id;
+
+        // Mover el lugar de vuelta a la lista de lugares
+        data[parentDay] = data[parentDay].filter(l => l !== place);
+        data.lugares.push(place);
+
+        // Actualizar visualmente
+        placesList.appendChild(element);
+        element.onclick = () => assignPlace(element);
+        deselectPlace();
+        sortPlacesList(placesList);
+        cleanDuplicates();
+        changesMade = true;
+    }
+
+    function createPlaceItem(place, clickHandler) {
+        const placeItem = document.createElement('div');
+        placeItem.className = 'place-item';
+        placeItem.textContent = place;
+        placeItem.onclick = () => clickHandler(placeItem);
+        return placeItem;
+    }
+
+    function selectPlace(element) {
+        if (selectedPlace) {
+            selectedPlace.classList.remove('selected');
+        }
+        selectedPlace = element;
+        selectedPlace.classList.add('selected');
+    }
+
+    function deselectPlace() {
+        if (selectedPlace) {
+            selectedPlace.classList.remove('selected');
+            selectedPlace = null;
+        }
+    }
+
+    function deleteSelectedPlace() {
+        if (selectedPlace) {
+            const place = selectedPlace.textContent;
+            const parentDay = selectedPlace.parentElement.id;
+
+            // Eliminar el lugar de la data
+            if (parentDay === 'places-list') {
+                data.lugares = data.lugares.filter(l => l !== place);
+            } else {
+                data[parentDay] = data[parentDay].filter(l => l !== place);
+            }
+
+            // Actualizar visualmente
+            selectedPlace.parentElement.removeChild(selectedPlace);
+            selectedPlace = null;
+            changesMade = true;
+        } else {
+            showPopup("Por favor, selecciona un lugar para eliminar.");
+        }
+    }
+
+    function showPopup(message) {
+        document.getElementById('popup-message').textContent = message;
+        document.getElementById('popup-warning').style.display = 'flex';
+    }
+
+    function closePopup() {
+        document.getElementById('popup-warning').style.display = 'none';
+    }
+
+    function cleanDuplicates() {
+        const assignedPlaces = new Set();
+
+        days.forEach(day => {
+            const dayElement = document.getElementById(day);
+            Array.from(dayElement.children).forEach(child => {
+                assignedPlaces.add(child.textContent);
+            });
+        });
+
+        Array.from(placesList.children).forEach(child => {
+            if (assignedPlaces.has(child.textContent)) {
+                placesList.removeChild(child);
+            }
+        });
+    }
+
+    function toggleAddPlacePopup() {
+        const popup = document.getElementById('popup-add-place');
+        popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    function addPlace() {
+        const municipio = document.getElementById('municipio').value.trim();
+        const localidad = document.getElementById('localidad').value.trim();
+
+        if (municipio && localidad) {
+            const newPlace = municipio.toUpperCase() + " " + localidad.toUpperCase();
+            if (!data.lugares.includes(newPlace) && !Object.values(data).flat().includes(newPlace)) {
+                data.lugares.push(newPlace);
+                const placeItem = createPlaceItem(newPlace, assignPlace);
+                placesList.appendChild(placeItem);
+                sortPlacesList(placesList);
+                changesMade = true;
+
+                // Limpiar los campos de la ventana de "Agregar Lugar"
+                document.getElementById('municipio').value = '';
+                document.getElementById('localidad').value = '';
+
+                toggleAddPlacePopup();  // Cierra la ventana emergente
+            } else {
+                showPopup("El lugar ya existe en la lista.");
+            }
+        } else {
+            showPopup("Por favor, complete ambos campos.");
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadFromFirebase(); // Cargar los datos desde Firebase al inicio
+    });
+
+</script>
+
+</body>
+</html>
